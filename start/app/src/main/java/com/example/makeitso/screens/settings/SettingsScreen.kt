@@ -32,6 +32,8 @@ import com.example.makeitso.common.composable.*
 import com.example.makeitso.common.ext.card
 import com.example.makeitso.common.ext.spacer
 import com.example.makeitso.theme.MakeItSoTheme
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @ExperimentalMaterialApi
 @Composable
@@ -53,21 +55,27 @@ fun SettingsScreen(
 @Composable
 fun SettingsScreenContent(
   modifier: Modifier = Modifier,
-  uiState: SettingsUiState,
+  uiState: Flow<SettingsUiState>,
   onLoginClick: () -> Unit,
   onSignUpClick: () -> Unit,
   onSignOutClick: () -> Unit,
   onDeleteMyAccountClick: () -> Unit
 ) {
+  // ✅ Recolectamos el Flow en un State observable para Compose
+  val state by uiState.collectAsState(initial = SettingsUiState())
+
   Column(
-    modifier = modifier.fillMaxWidth().fillMaxHeight().verticalScroll(rememberScrollState()),
+    modifier = modifier
+      .fillMaxWidth()
+      .fillMaxHeight()
+      .verticalScroll(rememberScrollState()),
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
     BasicToolbar(AppText.settings)
 
     Spacer(modifier = Modifier.spacer())
 
-    if (uiState.isAnonymousAccount) {
+    if (state.isAnonymousAccount) {
       RegularCardEditor(AppText.sign_in, AppIcon.ic_sign_in, "", Modifier.card()) {
         onLoginClick()
       }
@@ -141,7 +149,9 @@ private fun DeleteMyAccountCard(deleteMyAccount: () -> Unit) {
 @ExperimentalMaterialApi
 @Composable
 fun SettingsScreenPreview() {
-  val uiState = SettingsUiState(isAnonymousAccount = false)
+  // ✅ En el Preview no se puede usar hiltViewModel()
+  // Por eso simulamos un flujo de estado manualmente
+  val uiState = MutableStateFlow(SettingsUiState(isAnonymousAccount = true))
 
   MakeItSoTheme {
     SettingsScreenContent(
