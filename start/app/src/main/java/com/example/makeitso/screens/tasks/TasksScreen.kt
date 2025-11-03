@@ -43,21 +43,22 @@ fun TasksScreen(
   openScreen: (String) -> Unit,
   viewModel: TasksViewModel = hiltViewModel()
 ) {
-
   val tasks = viewModel
     .tasks
     .collectAsStateWithLifecycle(emptyList())
 
+  LaunchedEffect(viewModel) {
+    viewModel.loadTaskOptions()
+  }
+
   TasksScreenContent(
+    tasks = tasks.value, // Pasar las tareas aquí
     onAddClick = viewModel::onAddClick,
     onSettingsClick = viewModel::onSettingsClick,
     onTaskCheckChange = viewModel::onTaskCheckChange,
     onTaskActionClick = viewModel::onTaskActionClick,
     openScreen = openScreen
   )
-
-  LaunchedEffect(viewModel) { viewModel.loadTaskOptions() }
-
 }
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
@@ -65,6 +66,7 @@ fun TasksScreen(
 @ExperimentalMaterialApi
 fun TasksScreenContent(
   modifier: Modifier = Modifier,
+  tasks: List<Task> = emptyList(), // Añadir este parámetro
   onAddClick: ((String) -> Unit) -> Unit,
   onSettingsClick: ((String) -> Unit) -> Unit,
   onTaskCheckChange: (Task) -> Unit,
@@ -94,7 +96,7 @@ fun TasksScreenContent(
       Spacer(modifier = Modifier.smallSpacer())
 
       LazyColumn {
-        items(emptyList<Task>(), key = { it.id }) { taskItem ->
+        items(tasks, key = { it.id }) { taskItem -> // Ahora sin .value
           TaskItem(
             task = taskItem,
             options = listOf(),
@@ -113,6 +115,7 @@ fun TasksScreenContent(
 fun TasksScreenPreview() {
   MakeItSoTheme {
     TasksScreenContent(
+      tasks = emptyList(), // Añadir también en el preview
       onAddClick = { },
       onSettingsClick = { },
       onTaskCheckChange = { },
